@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مستودع ملفاتي</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #2f81f7;
+      --accent-hover: #4c9aff;
+      --accent-dim: #1f4068;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --success: #3fb950;
+      --danger: #f85149;
+      --warning: #d29922;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── Header ─── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo svg { color: var(--accent); }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    /* ─── Buttons ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover { background: #2d333b; border-color: #8b949e; }
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    .btn-danger:hover { background: rgba(248,81,73,0.1); }
+    .btn-sm { padding: 4px 10px; font-size: 0.8rem; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ─── Layout ─── */
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ─── Config Panel ─── */
+    #config-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 520px;
+      margin: 60px auto;
+    }
+    #config-panel h2 {
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+    }
+    #config-panel p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+    .form-group input {
+      width: 100%;
+      padding: 9px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.9rem;
+      transition: border 0.15s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .form-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .form-hint a { color: var(--accent); text-decoration: none; }
+    .form-hint a:hover { text-decoration: underline; }
+
+    /* ─── App Panel ─── */
+    #app-panel { display: none; }
+
+    /* ─── Upload Zone ─── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface);
+      margin-bottom: 24px;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(47,129,247,0.05);
+    }
+    .upload-zone svg { color: var(--accent); margin-bottom: 12px; }
+    .upload-zone h3 { font-size: 1rem; margin-bottom: 6px; }
+    .upload-zone p { color: var(--text-muted); font-size: 0.85rem; }
+    #file-input { display: none; }
+
+    /* ─── Progress ─── */
+    .upload-progress {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+    .progress-bar-bg {
+      background: var(--surface2);
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    /* ─── Toolbar ─── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .toolbar .search {
+      flex: 1;
+      min-width: 200px;
+      padding: 8px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    .toolbar .search:focus { outline: none; border-color: var(--accent); }
+    .file-count { color: var(--text-muted); font-size: 0.85rem; white-space: nowrap; }
+
+    /* ─── Files Grid ─── */
+    .files-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    /* ─── File Card ─── */
+    .file-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.15s, transform 0.15s;
+      position: relative;
+    }
+    .file-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .file-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      word-break: break-all;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+    .file-meta { font-size: 0.75rem; color: var(--text-muted); }
+    .file-actions { display: flex; gap: 6px; }
+    .file-actions .btn { flex: 1; justify-content: center; }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state svg { margin-bottom: 16px; opacity: 0.4; }
+    .empty-state h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 6px; }
+
+    /* ─── Toast ─── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s;
+      min-width: 200px;
+      max-width: 360px;
+      pointer-events: all;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--danger); }
+    .toast .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .toast.success .dot { background: var(--success); }
+    .toast.error .dot { background: var(--danger); }
+    .toast.info .dot { background: var(--accent); }
+
+    /* ─── Modal ─── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 400px;
+      width: 100%;
+    }
+    .modal h3 { margin-bottom: 10px; }
+    .modal p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ─── Loading Spinner ─── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 480px) {
+      .files-grid { grid-template-columns: 1fr 1fr; }
+      #config-panel { padding: 24px 16px; margin: 32px auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <a class="logo" href="#">
+    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+    مستودع ملفاتي
+  </a>
+  <div class="header-actions">
+    <span id="repo-badge" style="font-size:0.8rem;color:var(--text-muted);"></span>
+    <button class="btn btn-secondary btn-sm" id="settings-btn" style="display:none">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      الإعدادات
+    </button>
+  </div>
+</header>
+
+<!-- Config Panel -->
+<div id="config-panel">
+  <h2>إعداد المستودع</h2>
+  <p>أدخل بيانات GitHub الخاصة بك لتخزين ملفاتك. يتم حفظ البيانات محلياً في متصفحك فقط.</p>
+
+  <div class="form-group">
+    <label>اسم المستخدم على GitHub</label>
+    <input type="text" id="cfg-owner" placeholder="مثال: ahmed123" autocomplete="off" />
+  </div>
+  <div class="form-group">
+    <label>اسم المستودع (Repository)</label>
+    <input type="text" id="cfg-repo" placeholder="مثال: my-files" autocomplete="off" />
+    <div class="form-hint">يجب أن يكون المستودع موجوداً مسبقاً على GitHub</div>
+  </div>
+  <div class="form-group">
+    <label>رمز الوصول (Personal Access Token)</label>
+    <div style="position:relative">
+      <input type="password" id="cfg-token" placeholder="ghp_xxxxxxxxxxxx"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        style="padding-left:44px" />
+      <button type="button" id="token-toggle"
+        style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px;font-size:1rem"
+        title="إظهار / إخفاء">👁</button>
+    </div>
+    <div class="form-hint">
+      أنشئ رمزاً من
+      <a href="https://github.com/settings/tokens/new?scopes=repo&description=MyFilesHost" target="_blank">Settings → Developer settings → Tokens</a>
+      مع صلاحية <strong>repo</strong>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>مجلد التخزين (اختياري)</label>
+    <input type="text" id="cfg-path" placeholder="uploads" value="uploads" autocomplete="off" />
+    <div class="form-hint">المجلد داخل المستودع الذي ستُحفظ فيه الملفات</div>
+  </div>
+
+  <button class="btn btn-primary" id="save-config-btn" style="width:100%;justify-content:center;padding:10px">
+    حفظ والبدء
+  </button>
+</div>
+
+<!-- App Panel -->
+<div id="app-panel">
+  <div class="container">
+
+    <!-- Upload Zone -->
+    <div class="upload-zone" id="upload-zone">
+      <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <h3>اسحب وأفلت الملفات هنا</h3>
+      <p>أو انقر لاختيار الملفات — يمكن رفع أي نوع من الملفات</p>
+    </div>
+    <input type="file" id="file-input" multiple />
+
+    <!-- Progress -->
+    <div class="upload-progress" id="upload-progress">
+      <div class="progress-label">
+        <span id="progress-filename">جاري الرفع...</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input type="text" class="search" id="search-input" placeholder="🔍  ابحث في ملفاتك..." />
+      <span class="file-count" id="file-count"></span>
+      <button class="btn btn-secondary btn-sm" id="refresh-btn">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/>
+        </svg>
+        تحديث
+      </button>
+    </div>
+
+    <!-- Files Grid -->
+    <div class="files-grid" id="files-grid">
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="spinner" style="margin:0 auto 16px"></div>
+        <h3>جاري تحميل الملفات...</h3>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <h3>حذف الملف</h3>
+    <p id="delete-modal-msg">هل أنت متأكد من حذف هذا الملف؟ لا يمكن التراجع عن هذه العملية.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="delete-cancel-btn">إلغاء</button>
+      <button class="btn btn-danger" id="delete-confirm-btn">حذف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// Config
+// ═══════════════════════════════════════════════
+const CFG_KEY = 'gh_file_host_config';
+
+function loadConfig() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch { return null; }
+}
+function saveConfig(cfg) {
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+}
+
+let config = loadConfig();
+
+// ═══════════════════════════════════════════════
+// Toast
+// ═══════════════════════════════════════════════
+function toast(msg, type = 'info', duration = 3500) {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="dot"></span><span>${msg}</span>`;
+  c.appendChild(el);
+  requestAnimationFrame(() => { el.classList.add('show'); });
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+// ═══════════════════════════════════════════════
+// GitHub API helpers
+// ═══════════════════════════════════════════════
+function apiBase() {
+  return `https://api.github.com/repos/${config.owner}/${config.repo}/contents`;
+}
+function folderPath() {
+  return config.path ? config.path.replace(/\/+$/, '') : '';
+}
+function filePath(name) {
+  const base = folderPath();
+  return base ? `${base}/${name}` : name;
+}
+
+async function ghFetch(url, opts = {}) {
+  const res = await fetch(url, {
+    ...opts,
+    headers: {
+      'Authorization': `token ${config.token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function listFiles() {
+  const base = folderPath();
+  const url = `${apiBase()}/${base}`;
+  try {
+    const data = await ghFetch(url);
+    return Array.isArray(data) ? data.filter(f => f.type === 'file') : [];
+  } catch (e) {
+    if (e.message && e.message.includes('404')) return [];
+    throw e;
+  }
+}
+
+async function uploadFile(name, base64Content) {
+  const url = `${apiBase()}/${filePath(name)}`;
+  // Check if file exists to get its SHA (required for updates)
+  let sha;
+  try {
+    const existing = await ghFetch(url);
+    sha = existing.sha;
+  } catch (_) { /* new file */ }
+
+  const body = {
+    message: `رفع: ${name}`,
+    content: base64Content,
+    ...(sha ? { sha } : {})
+  };
+  return ghFetch(url, { method: 'PUT', body: JSON.stringify(body) });
+}
+
+async function deleteFile(name, sha) {
+  const url = `${apiBase()}/${filePath(name)}`;
+  return ghFetch(url, {
+    method: 'DELETE',
+    body: JSON.stringify({ message: `حذف: ${name}`, sha })
+  });
+}
+
+// ═══════════════════════════════════════════════
+// File helpers
+// ═══════════════════════════════════════════════
+function fileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  const map = {
+    pdf: '📄', doc: '📝', docx: '📝', txt: '📃', rtf: '📃',
+    xls: '📊', xlsx: '📊', csv: '📊',
+    ppt: '📌', pptx: '📌',
+    jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️', svg: '🖼️', bmp: '🖼️',
+    mp4: '🎬', mkv: '🎬', avi: '🎬', mov: '🎬', webm: '🎬',
+    mp3: '🎵', wav: '🎵', flac: '🎵', ogg: '🎵', aac: '🎵',
+    zip: '📦', rar: '📦', '7z': '📦', tar: '📦', gz: '📦',
+    js: '⚡', ts: '⚡', jsx: '⚡', tsx: '⚡',
+    html: '🌐', css: '🎨', json: '📋', xml: '📋', yaml: '📋',
+    py: '🐍', java: '☕', cpp: '⚙️', c: '⚙️', sh: '💻',
+    apk: '📱', exe: '💿', dmg: '💿',
+  };
+  return map[ext] || '📁';
+}
+
+function fmtSize(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// Render
+// ═══════════════════════════════════════════════
+let allFiles = [];
+
+function renderFiles(files) {
+  const grid = document.getElementById('files-grid');
+  if (!files.length) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        <h3>لا توجد ملفات بعد</h3>
+        <p>ارفع ملفاتك الأولى بالسحب والإفلات</p>
+      </div>`;
+    return;
+  }
+  grid.innerHTML = files.map(f => `
+    <div class="file-card" data-name="${esc(f.name)}" data-sha="${esc(f.sha)}" data-url="${esc(f.download_url || '')}">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="file-icon">${fileIcon(f.name)}</div>
+        <div class="file-info">
+          <div class="file-name">${esc(f.name)}</div>
+          <div class="file-meta">${fmtSize(f.size)}</div>
+        </div>
+      </div>
+      <div class="file-actions">
+        <a class="btn btn-primary btn-sm" href="${esc(f.download_url || '#')}" download="${esc(f.name)}" target="_blank">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          تنزيل
+        </a>
+        <button class="btn btn-secondary btn-sm copy-btn" data-url="${esc(f.download_url || '')}">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+        </button>
+        <button class="btn btn-danger btn-sm delete-btn" data-name="${esc(f.name)}" data-sha="${esc(f.sha)}">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  // Copy button
+  grid.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.url).then(() => toast('تم نسخ الرابط', 'success')).catch(() => toast('تعذّر النسخ', 'error'));
+    });
+  });
+
+  // Delete button
+  grid.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => openDeleteModal(btn.dataset.name, btn.dataset.sha));
+  });
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════
+// Load files
+// ═══════════════════════════════════════════════
+async function loadFiles() {
+  document.getElementById('file-count').textContent = '';
+  document.getElementById('files-grid').innerHTML = `
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="spinner" style="margin:0 auto 16px"></div>
+      <h3>جاري تحميل الملفات...</h3>
+    </div>`;
+  try {
+    allFiles = await listFiles();
+    applySearch();
+  } catch (e) {
+    document.getElementById('files-grid').innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <h3>خطأ في التحميل</h3>
+        <p>${esc(e.message)}</p>
+      </div>`;
+    toast('تعذّر تحميل الملفات: ' + e.message, 'error');
+  }
+}
+
+function applySearch() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const filtered = q ? allFiles.filter(f => f.name.toLowerCase().includes(q)) : allFiles;
+  document.getElementById('file-count').textContent = `${filtered.length} ملف`;
+  renderFiles(filtered);
+}
+
+// ═══════════════════════════════════════════════
+// Upload
+// ═══════════════════════════════════════════════
+async function handleFiles(fileList) {
+  const files = Array.from(fileList);
+  if (!files.length) return;
+  const prog = document.getElementById('upload-progress');
+  const bar = document.getElementById('progress-bar');
+  const pct = document.getElementById('progress-pct');
+  const fname = document.getElementById('progress-filename');
+  prog.style.display = 'block';
+
+  let done = 0;
+  for (const file of files) {
+    fname.textContent = `جاري رفع: ${file.name}`;
+    bar.style.width = `${Math.round((done / files.length) * 100)}%`;
+    pct.textContent = `${Math.round((done / files.length) * 100)}%`;
+    try {
+      const b64 = await toBase64(file);
+      await uploadFile(file.name, b64);
+      done++;
+      bar.style.width = `${Math.round((done / files.length) * 100)}%`;
+      pct.textContent = `${Math.round((done / files.length) * 100)}%`;
+      toast(`تم رفع ${file.name}`, 'success');
+    } catch (e) {
+      toast(`فشل رفع ${file.name}: ${e.message}`, 'error', 5000);
+      done++;
+    }
+  }
+
+  setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0'; }, 800);
+  await loadFiles();
+}
+
+// ═══════════════════════════════════════════════
+// Delete Modal
+// ═══════════════════════════════════════════════
+let pendingDelete = null;
+
+function openDeleteModal(name, sha) {
+  pendingDelete = { name, sha };
+  document.getElementById('delete-modal-msg').textContent = `هل أنت متأكد من حذف "${name}"؟ لا يمكن التراجع عن هذه العملية.`;
+  document.getElementById('delete-modal').classList.add('open');
+}
+
+document.getElementById('delete-cancel-btn').addEventListener('click', () => {
+  document.getElementById('delete-modal').classList.remove('open');
+  pendingDelete = null;
+});
+
+document.getElementById('delete-confirm-btn').addEventListener('click', async () => {
+  if (!pendingDelete) return;
+  const { name, sha } = pendingDelete;
+  document.getElementById('delete-modal').classList.remove('open');
+  pendingDelete = null;
+  try {
+    await deleteFile(name, sha);
+    toast(`تم حذف ${name}`, 'success');
+    await loadFiles();
+  } catch (e) {
+    toast('فشل الحذف: ' + e.message, 'error');
+  }
+});
+
+document.getElementById('delete-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) {
+    e.currentTarget.classList.remove('open');
+    pendingDelete = null;
+  }
+});
+
+// ═══════════════════════════════════════════════
+// Config UI
+// ═══════════════════════════════════════════════
+function showApp() {
+  document.getElementById('config-panel').style.display = 'none';
+  document.getElementById('app-panel').style.display = 'block';
+  document.getElementById('settings-btn').style.display = '';
+  document.getElementById('repo-badge').textContent = `${config.owner}/${config.repo}`;
+  loadFiles();
+}
+
+function showConfig() {
+  document.getElementById('app-panel').style.display = 'none';
+  document.getElementById('config-panel').style.display = '';
+  document.getElementById('settings-btn').style.display = 'none';
+  document.getElementById('repo-badge').textContent = '';
+  if (config) {
+    document.getElementById('cfg-owner').value = config.owner || '';
+    document.getElementById('cfg-repo').value = config.repo || '';
+    document.getElementById('cfg-token').value = config.token || '';
+    document.getElementById('cfg-path').value = config.path || 'uploads';
+  }
+}
+
+document.getElementById('save-config-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('save-config-btn');
+  const owner = document.getElementById('cfg-owner').value.trim();
+  const repo  = document.getElementById('cfg-repo').value.trim();
+  // Strip ALL whitespace and invisible characters (common mobile keyboard issue)
+  const token = document.getElementById('cfg-token').value.replace(/\s/g, '');
+  const path  = document.getElementById('cfg-path').value.trim() || 'uploads';
+
+  if (!owner || !repo || !token) {
+    toast('يرجى ملء جميع الحقول المطلوبة', 'error'); return;
+  }
+  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_') && !token.startsWith('gho_')) {
+    toast('التوكن يبدو غير صحيح — يجب أن يبدأ بـ ghp_ أو github_pat_', 'error', 6000); return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري التحقق...';
+
+  config = { owner, repo, token, path };
+
+  try {
+    const repoData = await ghFetch(`https://api.github.com/repos/${owner}/${repo}`);
+    saveConfig(config);
+    toast(`تم الاتصال بنجاح! (${repoData.full_name})`, 'success');
+    showApp();
+  } catch (e) {
+    let msg = e.message;
+    if (msg.includes('401')) msg = 'رمز الوصول غلط أو منتهي الصلاحية — تحقق من التوكن';
+    else if (msg.includes('404')) msg = 'المستودع غير موجود — تحقق من اسم المستخدم والمستودع';
+    else if (msg.includes('403')) msg = 'لا توجد صلاحية — تأكد أن التوكن يملك صلاحية repo';
+    else if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) msg = 'خطأ في الشبكة — تحقق من الإنترنت وأن المتصفح لا يحجب الطلبات';
+    toast('فشل الاتصال: ' + msg, 'error', 7000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'حفظ والبدء';
+  }
+});
+
+document.getElementById('settings-btn').addEventListener('click', showConfig);
+
+document.getElementById('token-toggle').addEventListener('click', () => {
+  const inp = document.getElementById('cfg-token');
+  const btn = document.getElementById('token-toggle');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+});
+
+// ═══════════════════════════════════════════════
+// Upload Zone events
+// ═══════════════════════════════════════════════
+const zone = document.getElementById('upload-zone');
+const input = document.getElementById('file-input');
+
+zone.addEventListener('click', () => input.click());
+input.addEventListener('change', () => { handleFiles(input.files); input.value = ''; });
+
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+document.getElementById('refresh-btn').addEventListener('click', loadFiles);
+document.getElementById('search-input').addEventListener('input', applySearch);
+
+// ═══════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════
+if (config && config.owner && config.repo && config.token) {
+  showApp();
+} else {
+  showConfig();
+}
+</script>
+</body>
+</html>
